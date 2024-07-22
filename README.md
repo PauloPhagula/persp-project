@@ -19,7 +19,7 @@ which project you're currently in, and focus on files that only belong
 to the current project when switching buffers.
 
 > [!NOTE]  
-> This package has come to life adapting the great package [persp-projectile by Bozhidar Batsov](https://github.com/bbatsov/persp-projectile) with ChatGTP.
+> This package has come to life adapting the great package [persp-projectile by Bozhidar Batsov](https://github.com/bbatsov/persp-projectile) with ChatGPT.
 > All credit goes to him ... I have been using his package for years now.
 > What inspired me to create this package is my recent effort to avoid most third party packages, specially if they prefer a newly defined interface over the built-in Emacs interface
 
