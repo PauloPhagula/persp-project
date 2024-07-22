@@ -18,23 +18,14 @@ desktops in Gnome and MacOS. This integration allows you to easily know
 which project you're currently in, and focus on files that only belong
 to the current project when switching buffers.
 
+Demo:
+
+[![Demo](https://img.youtube.com/vi/CkiKLR7B634/0.jpg)](https://youtube.com/watch?v=CkiKLR7B634)
+
 > [!NOTE]  
 > This package has come to life adapting the great package [persp-projectile by Bozhidar Batsov](https://github.com/bbatsov/persp-projectile) with ChatGPT.
 > All credit goes to him ... I have been using his package for years now.
 > What inspired me to create this package is my recent effort to avoid most third party packages, specially if they prefer a newly defined interface over the built-in Emacs interface
-
-<!-- 
-A picture says a thousand words. See below screenshot to get a concrete idea.
-
-Only current project related files showing in minibuffer when I call
-`ido-switch-buffer`, and an indicator in mode line tells me which
-project that I'm in.
-
-![persp-project Screenshot 1](screenshots/persp-project1.png)
-
-When I switch to a different project, I get a clean 'perspective'.
-
-![persp-project Screenshot 2](screenshots/persp-project2.png) -->
 
 ## Installation
 
