@@ -1,34 +1,19 @@
 ;;; persp-project.el --- Perspective integration with built-in project
 
 ;; Copyright (C) 2024 Paulo Phagula
+;;
+;; Licensed under the same terms as Emacs and under the MIT license.
 
-;; Author: Paulo Phagula
+;; Author: Paulo Phagula <paulo.phagula@gmail.com>
+;; URL: https://github.com/PauloPhagula/persp-project
 ;; Created: 2024-07-07
 ;; Keywords: project, convenience
 ;; Version: 1.0.0
+;; By: Paulo Phagula <paulo.phagula@gmail.com>
 ;; Package-Requires: ((perspective "1.9") (project "0.6.1") (cl-lib "0.3"))
 
-;; This file is NOT part of GNU Emacs.
-
-;;; License:
-
-;; This program is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
-;;
-;; This program is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU General Public License for more details.
-;;
-;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
-
 ;;; Commentary:
-;;
+
 ;; This library bridges perspective mode to the built-in project library.
 ;; The idea is to create a separate perspective when switching projects.
 ;; A perspective is an independent workspace for Emacs, similar to multiple
