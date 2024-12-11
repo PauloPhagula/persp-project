@@ -1,7 +1,7 @@
 EMACS ?= emacs
 
 # A space-separated list of required package names
-DEPS = perspective
+DEPS = perspective package-lint
 
 INIT_PACKAGES="(progn \
   (require 'package) \
