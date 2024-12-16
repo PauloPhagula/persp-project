@@ -1,4 +1,4 @@
-[![License GPL 3][badge-license]](http://www.gnu.org/licenses/gpl-3.0.txt)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!-- [![MELPA](http://melpa.org/packages/persp-project-badge.svg)](http://melpa.org/#/persp-project)
 [![MELPA Stable](http://stable.melpa.org/packages/persp-project-badge.svg)](http://stable.melpa.org/#/persp-project) -->
 
@@ -81,6 +81,4 @@ development of persp-project.
 
 Copyright © 2024 Paulo Phagula and [contributors](https://github.com/PauloPhagula/persp-project/contributors).
 
-Distributed under the GNU General Public License, version 3
-
-[badge-license]: https://img.shields.io/badge/license-GPL_3-green.svg
+Distributed under the MIT License
