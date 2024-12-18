@@ -1,4 +1,5 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/PauloPhagula/persp-project/actions/workflows/pipeline.yml/badge.svg?branch=main)](https://github.com/PauloPhagula/persp-project/actions/workflows/pipeline.yml)
 <!-- [![MELPA](http://melpa.org/packages/persp-project-badge.svg)](http://melpa.org/#/persp-project)
 [![MELPA Stable](http://stable.melpa.org/packages/persp-project-badge.svg)](http://stable.melpa.org/#/persp-project) -->
 
@@ -22,7 +23,7 @@ Demo:
 
 [![Demo](https://img.youtube.com/vi/CkiKLR7B634/0.jpg)](https://youtube.com/watch?v=CkiKLR7B634)
 
-> [!NOTE]  
+> [!NOTE]
 > This package has come to life adapting the great package [persp-projectile by Bozhidar Batsov](https://github.com/bbatsov/persp-projectile) with ChatGPT.
 > All credit goes to him ... I have been using his package for years now.
 > What inspired me to create this package is my recent effort to avoid most third party packages, specially if they prefer a newly defined interface over the built-in Emacs interface
