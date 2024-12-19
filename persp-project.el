@@ -7,10 +7,12 @@
 ;; Author: Paulo Phagula <paulo.phagula@gmail.com>
 ;; Maintainer: Paulo Phagula <paulo.phagula@gmail.com>
 ;; Created: 2024-07-07
-;; Version: 1.0.0
+;; Version: 0.0.1
 ;; Package-Requires: ((emacs "28.1") (perspective "1.9") (project "0.6.1"))
-;; Keywords: project, convenience
+;; Keywords: project, workspace, convenience, frames
 ;; URL: https://github.com/PauloPhagula/persp-project
+;; SPDX-License-Identifier: MIT
+
 
 ;;; Commentary:
 
@@ -49,7 +51,7 @@ project, this advice creates a new perspective for that project."
   "Switch to a project or perspective we have visited before.
 If the perspective of the corresponding project does not exist, this
 function will call `persp-switch' to create one and switch to
-that before `project-switch-project' invokes
+that before `PROJECT-SWITCH-PROJECT' invokes
 `project-switch-project-action'.
 
 Otherwise, this function calls `persp-switch' to switch to an
@@ -79,8 +81,7 @@ perspective."
             (persp-kill project-name))))))))
 
 (defadvice persp-init-frame (after persp-project--init-frame activate)
-  "Rename initial perspective to `project-name' when a
-new frame is created in a known project."
+  "Rename initial perspective to `project-name' when a new frame is created in a known project."
   (with-selected-frame frame
     (when (project-current)
       (persp-rename (file-name-nondirectory (directory-file-name (project-root (project-current))))))))
