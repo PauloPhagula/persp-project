@@ -1,16 +1,18 @@
-;;; persp-project.el --- Perspective integration with built-in project
+;;; persp-project.el --- Perspective integration with built-in project  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2024 Paulo Phagula
 ;;
-;; Licensed under the same terms as Emacs and under the MIT license.
+;; Licensed under the MIT license.
 
 ;; Author: Paulo Phagula <paulo.phagula@gmail.com>
-;; URL: https://github.com/PauloPhagula/persp-project
+;; Maintainer: Paulo Phagula <paulo.phagula@gmail.com>
 ;; Created: 2024-07-07
-;; Keywords: project, convenience
-;; Version: 1.0.0
-;; By: Paulo Phagula <paulo.phagula@gmail.com>
-;; Package-Requires: ((perspective "1.9") (project "0.6.1") (cl-lib "0.3"))
+;; Version: 0.0.1
+;; Package-Requires: ((emacs "28.1") (perspective "1.9") (project "0.6.1"))
+;; Keywords: project, workspace, convenience, frames
+;; URL: https://github.com/PauloPhagula/persp-project
+;; SPDX-License-Identifier: MIT
+
 
 ;;; Commentary:
 
@@ -30,7 +32,7 @@
 (require 'perspective)
 (require 'project)
 
-(defmacro project-persp-bridge (func-name)
+(defmacro persp-project-bridge (func-name)
   "Create advice to create a perspective before invoking function FUNC-NAME.
 The advice provides a bridge between perspective and project
 functions when switching between projects. After switching to a new
@@ -41,15 +43,15 @@ project, this advice creates a new perspective for that project."
        (when (and persp-mode (project-current))
          (persp-switch project-name)))))
 
-(project-persp-bridge project-dired)
-(project-persp-bridge project-find-file)
+(persp-project-bridge project-dired)
+(persp-project-bridge project-find-file)
 
 ;;;###autoload
-(defun project-persp-switch-project (project-to-switch)
+(defun persp-project-switch-project (project-to-switch)
   "Switch to a project or perspective we have visited before.
 If the perspective of the corresponding project does not exist, this
 function will call `persp-switch' to create one and switch to
-that before `project-switch-project' invokes
+that before `PROJECT-SWITCH-PROJECT' invokes
 `project-switch-project-action'.
 
 Otherwise, this function calls `persp-switch' to switch to an
@@ -78,9 +80,8 @@ perspective."
           (with-selected-frame frame
             (persp-kill project-name))))))))
 
-(defadvice persp-init-frame (after project-persp-init-frame activate)
-  "Rename initial perspective to `project-name' when a
-new frame is created in a known project."
+(defadvice persp-init-frame (after persp-project--init-frame activate)
+  "Rename initial perspective to `project-name' when a new frame is created in a known project."
   (with-selected-frame frame
     (when (project-current)
       (persp-rename (file-name-nondirectory (directory-file-name (project-root (project-current))))))))
