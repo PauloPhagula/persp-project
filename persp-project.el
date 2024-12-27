@@ -56,7 +56,9 @@ that before `PROJECT-SWITCH-PROJECT' invokes
 
 Otherwise, this function calls `persp-switch' to switch to an
 existing perspective of the project unless we're already in that
-perspective."
+perspective.
+
+`PROJECT-TO-SWITCH' denotes the project/perspective."
   (interactive (list (completing-read "Switch to project: " (project-known-project-roots))))
   (let* ((project-root (file-name-as-directory project-to-switch))
          (project-name (file-name-nondirectory (directory-file-name project-root)))
