@@ -35,7 +35,7 @@ If you're not, you can find the install instructions in the project's README.
 
 This package is not yet available on MELPA, so you can either install it manually or by combining use-package with straight.el or quelpa.
 
-## Manually
+### Manually
 
 Download the `persp-project.el` file and add it to your load path.
 Most likely you will want to add it to your `~/.emacs.d/lisp` directory.
@@ -50,7 +50,7 @@ And then request it via use-package more or less like so:
   :after (perspective project))
 ```
 
-## Automatically through straight.el or quelpa
+### Automatically through straight.el or quelpa
 
 If you're using straight.el, you can add the following to your init.el:
 
@@ -59,6 +59,14 @@ If you're using straight.el, you can add the following to your init.el:
   :straight (persp-project :type git :host github :repo "PauloPhagula/persp-project")
   :after (perspective project))
 ```
+
+## Usage
+
+Once installed you can switch projects as usual with `project-switch-project`,
+usually bound to <kbd>C-x p p</kbd>.
+
+If you use [dashboard](https://github.com/emacs-dashboard/emacs-dashboard) it's
+recommended that in your configuration you  set `dashboard-projects-switch-function` to `'persp-project-switch-project`.
 
 ## Known issues
 
