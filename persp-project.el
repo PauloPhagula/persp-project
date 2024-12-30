@@ -34,7 +34,7 @@
 
 (defvar persp-project-mode nil)
 (defgroup persp-project-bridge nil
-  "perspective-mode project integration."
+  "persp-mode and project integration."
   :group 'persp-mode
   :group 'project
   :prefix "persp-project-bridge-"
@@ -42,7 +42,7 @@
   '(url-link :tag "Github" "https://github.com/PauloPhagula/persp-project")
   )
 
-(defmacro persp-project-bridge (func-name)
+(defmacro persp-project--bridge (func-name)
   "Create advice to create a perspective before invoking function FUNC-NAME.
 The advice provides a bridge between perspective and project
 functions when switching between projects. After switching to a new
@@ -53,7 +53,8 @@ project, this advice creates a new perspective for that project."
        (when (and persp-mode (project-current))
          (persp-switch project-name)))))
 
-(defun persp-project-remove-advice (func-name)
+
+(defun persp-project--remove-advice (func-name)
   "Remove advice from FUNC-NAME created by `persp-project-bridge`."
   (ad-remove-advice func-name 'before 'project-create-perspective-after-switching-projects)
   (ad-update func-name))
@@ -93,12 +94,17 @@ perspective.
             (with-selected-frame frame
               (persp-kill project-name))))))))
 
-(defadvice persp-init-frame (after persp-project--init-frame activate)
-  "Rename initial perspective to `project-name' when a new frame is created in a known project."
-  (with-selected-frame frame
-    (when (project-current)
-      (persp-rename (file-name-nondirectory (directory-file-name (project-root (project-current))))))))
+(defun persp-project--init-frame-add-advice
+  (defadvice persp-init-frame (after persp-project--init-frame activate)
+    "Rename initial perspective to `project-name' when a new frame is created in a known project."
+    (with-selected-frame frame
+      (when (project-current)
+        (persp-rename (file-name-nondirectory (directory-file-name (project-root (project-current))))))))
+  )
 
+(defun persp-project--init-frame-remove-advice (func-name)
+  (ad-remove-advice persp-init-frame 'after 'persp-project--init-frame)
+  (ad-update ))
 
 ;;;###autoload
 (define-minor-mode persp-project-mode
@@ -110,19 +116,21 @@ Creates perspective for projects."
   :global t
 
   (if persp-project-mode
-    (if (and persp-mode project-prefix-map)
+    (if (and persp-mode (featurep 'project))
       (progn
-        (persp-project-bridge project-dired)
-        (persp-project-bridge project-find-file)
+        (persp-project--bridge project-dired)
+        (persp-project--bridge project-find-file)
+        (persp-project--init-frame-add-advice)
         )
       (message "You cannot enable persp-project-mode unless persp-mode and project are active.")
       (setq persp-project-mode nil))
 
     ;; Remove the advice when the mode is disabled
     (progn
-      (persp-project-remove-advice 'project-dired)
-      (persp-project-remove-advice 'project-find-file))
-
+      (persp-project--remove-advice 'project-dired)
+      (persp-project--remove-advice 'project-find-file)
+      (persp-project--init-frame-remove-advice)
+      )
     )
   )
 
