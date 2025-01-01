@@ -7,7 +7,7 @@
 ;; Author: Paulo Phagula <paulo.phagula@gmail.com>
 ;; Maintainer: Paulo Phagula <paulo.phagula@gmail.com>
 ;; Created: 2024-07-07
-;; Version: 0.0.1
+;; Version: 0.1.0
 ;; Package-Requires: ((emacs "28.1") (perspective "1.9") (project "0.6.1"))
 ;; Keywords: project, workspace, convenience, frames
 ;; URL: https://github.com/PauloPhagula/persp-project
@@ -126,4 +126,3 @@ Creates perspective for projects."
 
 (provide 'persp-project)
 ;;; persp-project.el ends here
-
