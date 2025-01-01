@@ -47,7 +47,10 @@ And then request it via use-package more or less like so:
 
 (use-package persp-project
   :load-path "lisp/persp-project"
-  :after (perspective project))
+  :after (perspective project)
+  :config
+  (persp-project-mode)
+  )
 ```
 
 ### Automatically through straight.el or quelpa
@@ -57,7 +60,9 @@ If you're using straight.el, you can add the following to your init.el:
 ```elisp
 (use-package persp-project
   :straight (persp-project :type git :host github :repo "PauloPhagula/persp-project")
-  :after (perspective project))
+  :after (perspective project)
+  :config
+  (persp-project-mode)
 ```
 
 ## Usage
