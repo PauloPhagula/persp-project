@@ -33,29 +33,26 @@
 
 (defvar persp-project-mode nil)
 (defgroup persp-project-bridge nil
-  "persp-mode and project integration."
+  "Integration between persp-mode and project."
   :group 'persp-mode
   :group 'project
   :prefix "persp-project-bridge-"
   :link '(url-link :tag "Github" "https://github.com/PauloPhagula/persp-project"))
 
-(defun persp-project--create-advice (func-name)
-  "Create advice to create a perspective before invoking function FUNC-NAME.
-The advice provides a bridge between perspective and project
-functions when switching between projects. After switching to a new
-project, this advice creates a new perspective for that project."
-  (eval
-   `(defadvice ,func-name (before persp-project--create-perspective-after-switching activate)
-      "Create a dedicated perspective for the current project's window after switching projects."
-      (let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current))))))
-        (when (and persp-mode (project-current))
-          (persp-switch project-name))))))
+(defun persp-project--rename-frame (frame)
+  "Rename the initial perspective for FRAME to match the current project."
+  (with-selected-frame frame
+    (when (and persp-mode (project-current))
+      (let ((project-name (file-name-nondirectory
+                           (directory-file-name (project-root (project-current))))))
+        (persp-rename project-name)))))
 
-(defun persp-project--remove-advice (func-name)
-  "Remove the advice for FUNC-NAME created by `persp-project--create-advice`."
-  (eval
-   `(ad-remove-advice ',func-name 'before 'persp-project--create-perspective-after-switching)
-   `(ad-update ',func-name)))
+(defun persp-project--rename-window ()
+  "Create a dedicated perspective for the current project's window after switching projects."
+  (when (and persp-mode (project-current))
+    (let ((project-name (file-name-nondirectory
+                          (directory-file-name (project-root (project-current))))))
+      (persp-swicth project-name))))
 
 (defun persp-project-switch-project (project-to-switch)
   "Switch to a project or perspective we have visited before.
@@ -92,11 +89,6 @@ PROJECT-TO-SWITCH denotes the project/perspective."
           (with-selected-frame frame
             (persp-kill project-name))))))))
 
-(defadvice persp-init-frame (after persp-project--init-frame activate)
-  "Rename initial perspective to `project-name` when a new frame is created in a known project."
-  (with-selected-frame frame
-    (when (project-current)
-      (persp-rename (file-name-nondirectory (directory-file-name (project-root (project-current))))))))
 
 ;;;###autoload
 (define-minor-mode persp-project-mode
@@ -110,19 +102,19 @@ Creates perspective for projects."
   (if persp-project-mode
       (if (and persp-mode (featurep 'project))
           (progn
-            (persp-project--create-advice 'project-dired)
-            (persp-project--create-advice 'project-find-file)
-            (ad-enable-advice 'persp-init-frame 'after 'persp-project--init-frame)
-            (ad-activate 'persp-init-frame))
+            (advice-add 'project-dired :before #'persp-project--rename-window)
+            (advice-add 'project-find-file :before #'persp-project--rename-window)
+            (advice-add 'persp-init-frame :after #'persp-project--rename-frame)
+            )
         (message "You cannot enable persp-project-mode unless persp-mode and project are active.")
         (setq persp-project-mode nil))
 
     ;; Disable advices when the mode is turned off
     (progn
-      (persp-project--remove-advice 'project-dired)
-      (persp-project--remove-advice 'project-find-file)
-      (ad-disable-advice 'persp-init-frame 'after 'persp-project--init-frame)
-      (ad-update 'persp-init-frame))))
+        (advice-remove 'project-dired #'persp-project--rename-window)
+        (advice-remove 'project-find-file #'persp-project--rename-window)
+        (advice-remove 'persp-init-frame #'persp-project--rename-frame)
+      )))
 
 (provide 'persp-project)
 ;;; persp-project.el ends here
