@@ -39,13 +39,12 @@
   :prefix "persp-project-bridge-"
   :link '(url-link :tag "Github" "https://github.com/PauloPhagula/persp-project"))
 
-(defun persp-project--create-perspective-after-switching (func &rest args)
+(defun persp-project--create-perspective-after-switching (&rest _)
   "Create a dedicated perspective for the current project's window after switching projects.
 This is used as advice for project-related functions."
   (let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current))))))
     (when (and persp-mode (project-current))
-      (persp-switch project-name)))
-  (apply func args))
+      (persp-switch project-name))))
 
 (defun persp-project--init-frame (frame)
   "Rename initial perspective to `project-name` when a new frame is created in a known project."
