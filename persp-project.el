@@ -39,12 +39,13 @@
   :prefix "persp-project-bridge-"
   :link '(url-link :tag "Github" "https://github.com/PauloPhagula/persp-project"))
 
-(defun persp-project--create-perspective-after-switching (&rest _)
-  "Create a dedicated perspective for the current project's window after switching projects.
+(defun persp-project--ensure-perspective (func &rest args)
+  "Ensure we're in the correct perspective before executing FUNC with ARGS.
 This is used as advice for project-related functions."
   (let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current))))))
     (when (and persp-mode (project-current))
-      (persp-switch project-name))))
+      (persp-switch project-name))
+    (apply func args)))
 
 (defun persp-project--init-frame (frame)
   "Rename initial perspective to `project-name` when a new frame is created in a known project."
@@ -100,15 +101,15 @@ Creates perspective for projects."
       (if persp-project-mode
           ;; Enable mode
           (progn
-            (advice-add 'project-switch-project :after #'persp-project--create-perspective-after-switching)
-            (advice-add 'project-dired :after #'persp-project--create-perspective-after-switching)
-            (advice-add 'project-find-file :after #'persp-project--create-perspective-after-switching)
+            (advice-add 'project-switch-project :around #'persp-project--ensure-perspective)
+            (advice-add 'project-dired :around #'persp-project--ensure-perspective)
+            (advice-add 'project-find-file :around #'persp-project--ensure-perspective)
             (advice-add 'persp-init-frame :after #'persp-project--init-frame))
         ;; Disable mode
         (progn
-          (advice-remove 'project-switch-project #'persp-project--create-perspective-after-switching)
-          (advice-remove 'project-dired #'persp-project--create-perspective-after-switching)
-          (advice-remove 'project-find-file #'persp-project--create-perspective-after-switching)
+          (advice-remove 'project-switch-project #'persp-project--ensure-perspective)
+          (advice-remove 'project-dired #'persp-project--ensure-perspective)
+          (advice-remove 'project-find-file #'persp-project--ensure-perspective)
           (advice-remove 'persp-init-frame #'persp-project--init-frame)))
     ;; Dependencies not met
     (progn
