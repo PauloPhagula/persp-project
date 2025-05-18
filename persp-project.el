@@ -39,27 +39,37 @@
   :prefix "persp-project-bridge-"
   :link '(url-link :tag "Github" "https://github.com/PauloPhagula/persp-project"))
 
+(defun persp-project--get-project-name (project-path)
+  "Get a unique name for the project at PROJECT-PATH."
+  (file-name-nondirectory (directory-file-name project-path)))
+
+(defun persp-project--switch-to-project-perspective (project-name)
+  "Switch to the perspective for PROJECT-NAME, creating it if it doesn't exist."
+  (when persp-mode
+    (unless (gethash project-name (perspectives-hash))
+      (persp-new project-name))
+    (persp-switch project-name)))
+
 (defun persp-project--ensure-perspective (func &rest args)
   "Ensure we're in the correct perspective before executing FUNC with ARGS.
 This is used as advice for project-related functions."
   (if (eq func #'project-switch-project)
       ;; For project switching, use the project path directly
       (let* ((project-path (car args))
-             (project-name (file-name-nondirectory (directory-file-name project-path))))
-        (when persp-mode
-          (persp-switch project-name))
+             (project-name (persp-project--get-project-name project-path)))
+        (persp-project--switch-to-project-perspective project-name)
         (apply func args))
     ;; For other operations, switch perspective first
-    (let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current))))))
-      (when (and persp-mode (project-current))
-        (persp-switch project-name))
+    (let ((project-name (persp-project--get-project-name (project-root (project-current)))))
+      (persp-project--switch-to-project-perspective project-name)
       (apply func args))))
 
 (defun persp-project--init-frame (frame)
   "Rename initial perspective to `project-name` when a new frame is created in a known project."
   (with-selected-frame frame
     (when (project-current)
-      (persp-rename (file-name-nondirectory (directory-file-name (project-root (project-current))))))))
+      (let ((project-name (persp-project--get-project-name (project-root (project-current)))))
+        (persp-rename project-name)))))
 
 (defun persp-project-switch-project (project-to-switch)
   "Switch to a project or perspective we have visited before.
@@ -75,7 +85,7 @@ perspective.
 PROJECT-TO-SWITCH denotes the project/perspective."
   (interactive (list (completing-read "Switch to project: " (project-known-project-roots))))
   (let* ((project-root (file-name-as-directory project-to-switch))
-         (project-name (file-name-nondirectory (directory-file-name project-root)))
+         (project-name (persp-project--get-project-name project-root))
          (persp (gethash project-name (perspectives-hash))))
     (cond
      ;; Project-specific perspective already exists
