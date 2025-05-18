@@ -100,11 +100,13 @@ Creates perspective for projects."
       (if persp-project-mode
           ;; Enable mode
           (progn
-            (advice-add 'project-dired :before #'persp-project--create-perspective-after-switching)
-            (advice-add 'project-find-file :before #'persp-project--create-perspective-after-switching)
+            (advice-add 'project-switch-project :after #'persp-project--create-perspective-after-switching)
+            (advice-add 'project-dired :after #'persp-project--create-perspective-after-switching)
+            (advice-add 'project-find-file :after #'persp-project--create-perspective-after-switching)
             (advice-add 'persp-init-frame :after #'persp-project--init-frame))
         ;; Disable mode
         (progn
+          (advice-remove 'project-switch-project #'persp-project--create-perspective-after-switching)
           (advice-remove 'project-dired #'persp-project--create-perspective-after-switching)
           (advice-remove 'project-find-file #'persp-project--create-perspective-after-switching)
           (advice-remove 'persp-init-frame #'persp-project--init-frame)))
