@@ -43,12 +43,12 @@
   "Ensure we're in the correct perspective before executing FUNC with ARGS.
 This is used as advice for project-related functions."
   (if (eq func #'project-switch-project)
-      ;; For project switching, let the original function run first
-      (let ((result (apply func args)))
-        (when (and persp-mode (project-current))
-          (let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current))))))
-            (persp-switch project-name)))
-        result)
+      ;; For project switching, use the project path directly
+      (let* ((project-path (car args))
+             (project-name (file-name-nondirectory (directory-file-name project-path))))
+        (when persp-mode
+          (persp-switch project-name))
+        (apply func args))
     ;; For other operations, switch perspective first
     (let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current))))))
       (when (and persp-mode (project-current))
