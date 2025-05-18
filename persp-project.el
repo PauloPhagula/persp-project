@@ -45,7 +45,7 @@
 (require 'perspective)
 (require 'project)
 
-(defmacro project-persp-bridge (func-name)
+(defmacro persp-project-bridge (func-name)
   "Create advice to create a perspective before invoking function FUNC-NAME.
 The advice provides a bridge between perspective and project
 functions when switching between projects. After switching to a new
@@ -56,11 +56,11 @@ project, this advice creates a new perspective for that project."
        (when (and persp-mode (project-current))
          (persp-switch project-name)))))
 
-(project-persp-bridge project-dired)
-(project-persp-bridge project-find-file)
+(persp-project-bridge project-dired)
+(persp-project-bridge project-find-file)
 
 ;;;###autoload
-(defun project-persp-switch-project (project-to-switch)
+(defun persp-project-switch-project (project-to-switch)
   "Switch to a project or perspective we have visited before.
 If the perspective of the corresponding project does not exist, this
 function will call `persp-switch' to create one and switch to
@@ -93,7 +93,7 @@ perspective."
           (with-selected-frame frame
             (persp-kill project-name))))))))
 
-(defadvice persp-init-frame (after project-persp-init-frame activate)
+(defadvice persp-init-frame (after persp-project-init-frame activate)
   "Rename initial perspective to `project-name' when a
 new frame is created in a known project."
   (with-selected-frame frame
