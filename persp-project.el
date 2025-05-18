@@ -42,10 +42,18 @@
 (defun persp-project--ensure-perspective (func &rest args)
   "Ensure we're in the correct perspective before executing FUNC with ARGS.
 This is used as advice for project-related functions."
-  (let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current))))))
-    (when (and persp-mode (project-current))
-      (persp-switch project-name))
-    (apply func args)))
+  (if (eq func #'project-switch-project)
+      ;; For project switching, let the original function run first
+      (let ((result (apply func args)))
+        (when (and persp-mode (project-current))
+          (let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current))))))
+            (persp-switch project-name)))
+        result)
+    ;; For other operations, switch perspective first
+    (let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current))))))
+      (when (and persp-mode (project-current))
+        (persp-switch project-name))
+      (apply func args))))
 
 (defun persp-project--init-frame (frame)
   "Rename initial perspective to `project-name` when a new frame is created in a known project."
