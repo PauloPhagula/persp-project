@@ -35,10 +35,9 @@
 ;; desktops in Gnome and MacOS. This integration allows you to easily know
 ;; which project you're currently in, and focus on files that only belong
 ;; to the current project when switching buffers.
-;;
+
 ;; To use this library, put this file in your Emacs load path, and
-;; call (require 'persp-project). Then enable the minor mode with
-;; M-x persp-project-mode.
+;; call (require 'persp-project)
 
 ;; See perspective.el on github: https://github.com/nex3/perspective-el
 
@@ -46,47 +45,25 @@
 (require 'perspective)
 (require 'project)
 
-(defvar persp-project-mode-map (make-sparse-keymap)
-  "Keymap for persp-project-mode.")
+(defun persp-project--create-perspective (func &rest args)
+  "Create a dedicated perspective for the current project's window after switching projects.
+This is an advice function that runs before FUNC with ARGS."
+  (let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current))))))
+    (when (and persp-mode (project-current))
+      (persp-switch project-name)))
+  (apply func args))
 
-(defun persp-project--bridge (func-name)
-  "Create advice to create a perspective before invoking function FUNC-NAME.
-The advice provides a bridge between perspective and project
-functions when switching between projects. After switching to a new
-project, this advice creates a new perspective for that project."
-  (defadvice func-name (before project-create-perspective-after-switching-projects activate)
-    "Create a dedicated perspective for the current project's window after switching projects."
-    (let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current))))))
-      (when (and persp-mode (project-current))
-        (persp-switch project-name)))))
+(defun persp-project--init-frame (frame)
+  "Rename initial perspective to `project-name' when a new frame is created in a known project.
+This is an advice function that runs after `persp-init-frame'."
+  (with-selected-frame frame
+    (when (project-current)
+      (persp-rename (file-name-nondirectory (directory-file-name (project-root (project-current))))))))
 
-(defun persp-project--setup-advice ()
-  "Setup advice for project functions."
-  (persp-project--bridge 'project-dired)
-  (persp-project--bridge 'project-find-file)
-  (defadvice persp-init-frame (after persp-project-init-frame activate)
-    "Rename initial perspective to `project-name' when a new frame is created in a known project."
-    (with-selected-frame frame
-      (when (project-current)
-        (persp-rename (file-name-nondirectory (directory-file-name (project-root (project-current)))))))))
-
-(defun persp-project--remove-advice ()
-  "Remove advice from project functions."
-  (ad-remove-advice 'project-dired 'before 'project-create-perspective-after-switching-projects)
-  (ad-remove-advice 'project-find-file 'before 'project-create-perspective-after-switching-projects)
-  (ad-remove-advice 'persp-init-frame 'after 'persp-project-init-frame))
-
-;;;###autoload
-(define-minor-mode persp-project-mode
-  "Toggle persp-project mode.
-When enabled, creates a separate perspective when switching projects.
-This mode integrates perspective.el with the built-in project.el,
-creating a new perspective for each project you switch to."
-  :lighter " PerspProj"
-  :group 'persp-project
-  (if persp-project-mode
-      (persp-project--setup-advice)
-    (persp-project--remove-advice)))
+;; Add advice to project functions
+(advice-add 'project-dired :before #'persp-project--create-perspective)
+(advice-add 'project-find-file :before #'persp-project--create-perspective)
+(advice-add 'persp-init-frame :after #'persp-project--init-frame)
 
 ;;;###autoload
 (defun persp-project-switch-project (project-to-switch)
