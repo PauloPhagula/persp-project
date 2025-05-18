@@ -1,20 +1,34 @@
-;;; persp-project.el --- Perspective integration with built-in project  -*- lexical-binding: t; -*-
+;;; persp-project.el --- Perspective integration with built-in project
 
 ;; Copyright (C) 2024 Paulo Phagula
-;;
-;; Licensed under the MIT license.
 
-;; Author: Paulo Phagula <paulo.phagula@gmail.com>
-;; Maintainer: Paulo Phagula <paulo.phagula@gmail.com>
+;; Author: Paulo Phagula
 ;; Created: 2024-07-07
-;; Version: 0.1.0
-;; Package-Requires: ((emacs "28.1") (perspective "1.9") (project "0.6.1"))
-;; Keywords: project, workspace, convenience, frames
-;; URL: https://github.com/PauloPhagula/persp-project
-;; SPDX-License-Identifier: MIT
+;; Keywords: project, convenience
+;; Version: 1.0.0
+;; Package-Requires: ((perspective "1.9") (project "0.6.1") (cl-lib "0.3"))
+
+;; This file is NOT part of GNU Emacs.
+
+;;; License:
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
-
+;;
 ;; This library bridges perspective mode to the built-in project library.
 ;; The idea is to create a separate perspective when switching projects.
 ;; A perspective is an independent workspace for Emacs, similar to multiple
@@ -31,47 +45,61 @@
 (require 'perspective)
 (require 'project)
 
-(defvar persp-project-mode nil)
-(defgroup persp-project-bridge nil
-  "persp-mode and project integration."
+(defvar persp-project-mode nil
+  "Non-nil if persp-project-mode is enabled.")
+
+(defgroup persp-project nil
+  "Perspective integration with built-in project."
   :group 'persp-mode
-  :group 'project
-  :prefix "persp-project-bridge-"
-  :link '(url-link :tag "Github" "https://github.com/PauloPhagula/persp-project"))
+  :group 'project)
 
-(defun persp-project--get-project-name (project-path)
-  "Get a unique name for the project at PROJECT-PATH."
-  (file-name-nondirectory (directory-file-name project-path)))
+(defmacro project-persp-bridge (func-name)
+  "Create advice to create a perspective before invoking function FUNC-NAME.
+The advice provides a bridge between perspective and project
+functions when switching between projects. After switching to a new
+project, this advice creates a new perspective for that project."
+  `(defadvice ,func-name (before project-create-perspective-after-switching-projects activate)
+     "Create a dedicated perspective for the current project's window after switching projects."
+     (when persp-project-mode
+       (let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current))))))
+         (when (and persp-mode (project-current))
+           (persp-switch project-name))))))
 
-(defun persp-project--switch-to-project-perspective (project-name)
-  "Switch to the perspective for PROJECT-NAME, creating it if it doesn't exist."
-  (when persp-mode
-    (unless (gethash project-name (perspectives-hash))
-      (persp-new project-name))
-    (persp-switch project-name)))
+;;;###autoload
+(define-minor-mode persp-project-mode
+  "Toggle perspective integration with project mode.
+When enabled, creates a separate perspective when switching projects."
+  :require 'persp-project
+  :group 'persp-project
+  :init-value nil
+  :global t
 
-(defun persp-project--ensure-perspective (func &rest args)
-  "Ensure we're in the correct perspective before executing FUNC with ARGS.
-This is used as advice for project-related functions."
-  (if (eq func #'project-switch-project)
-      ;; For project switching, use the project path directly
-      (let* ((project-path (car args))
-             (project-name (persp-project--get-project-name project-path)))
-        (persp-project--switch-to-project-perspective project-name)
-        (apply func args))
-    ;; For other operations, switch perspective first
-    (let ((project-name (persp-project--get-project-name (project-root (project-current)))))
-      (persp-project--switch-to-project-perspective project-name)
-      (apply func args))))
+  (if persp-project-mode
+      (if (and persp-mode (featurep 'project))
+          (progn
+            (project-persp-bridge project-dired)
+            (project-persp-bridge project-find-file)
+            (defadvice persp-init-frame (after project-persp-init-frame activate)
+              "Rename initial perspective to `project-name' when a
+new frame is created in a known project."
+              (when persp-project-mode
+                (with-selected-frame frame
+                  (when (project-current)
+                    (persp-rename (file-name-nondirectory (directory-file-name (project-root (project-current)))))))))
+            (ad-activate 'persp-init-frame))
+        (message "You cannot enable persp-project-mode unless persp-mode and project are active.")
+        (setq persp-project-mode nil))
+    ;; Disable mode
+    (progn
+      (ad-remove-advice 'project-dired 'before 'project-create-perspective-after-switching-projects)
+      (ad-remove-advice 'project-find-file 'before 'project-create-perspective-after-switching-projects)
+      (ad-remove-advice 'persp-init-frame 'after 'project-persp-init-frame)
+      (ad-update 'project-dired)
+      (ad-update 'project-find-file)
+      (ad-update 'persp-init-frame))))
 
-(defun persp-project--init-frame (frame)
-  "Rename initial perspective to `project-name` when a new frame is created in a known project."
-  (with-selected-frame frame
-    (when (project-current)
-      (let ((project-name (persp-project--get-project-name (project-root (project-current)))))
-        (persp-rename project-name)))))
-
-(defun persp-project-switch-project (project-to-switch)
+;;;###autoload
+(defun project-persp-switch-project (project-to-switch)
   "Switch to a project or perspective we have visited before.
 If the perspective of the corresponding project does not exist, this
 function will call `persp-switch' to create one and switch to
@@ -80,59 +108,29 @@ that before `project-switch-project' invokes
 
 Otherwise, this function calls `persp-switch' to switch to an
 existing perspective of the project unless we're already in that
-perspective.
-
-PROJECT-TO-SWITCH denotes the project/perspective."
+perspective."
   (interactive (list (completing-read "Switch to project: " (project-known-project-roots))))
   (let* ((project-root (file-name-as-directory project-to-switch))
-         (project-name (persp-project--get-project-name project-root))
+         (project-name (file-name-nondirectory (directory-file-name project-root)))
          (persp (gethash project-name (perspectives-hash))))
     (cond
-     ;; Project-specific perspective already exists
+     ;; project-specific perspective already exists
      ((and persp (not (equal persp (persp-curr))))
       (persp-switch project-name))
-     ;; Perspective exists but does not match with project-name
+     ;; persp exists but does not match with project-name
      ((and persp (not (equal persp project-name)))
       (persp-switch project-name)
       (project-switch-project project-root))
-     ;; Project-specific perspective doesn't exist
+     ;; project-specific perspective doesn't exist
      ((not persp)
       (let ((frame (selected-frame)))
         (persp-switch project-name)
         (project-switch-project project-root)
-        ;; Clean up if we switched to a new frame. `helm` for one allows finding
+        ;; Clean up if we switched to a new frame. `helm' for one allows finding
         ;; files in new frames so this is a real possibility.
         (when (not (equal frame (selected-frame)))
           (with-selected-frame frame
             (persp-kill project-name))))))))
-
-;;;###autoload
-(define-minor-mode persp-project-mode
-  "`perspective-mode` and `project` integration.
-Creates perspective for projects."
-  :require 'persp-project
-  :group 'persp-project
-  :init-value nil
-  :global t
-
-  (if (and persp-mode (featurep 'project))
-      (if persp-project-mode
-          ;; Enable mode
-          (progn
-            (advice-add 'project-switch-project :around #'persp-project--ensure-perspective)
-            (advice-add 'project-dired :around #'persp-project--ensure-perspective)
-            (advice-add 'project-find-file :around #'persp-project--ensure-perspective)
-            (advice-add 'persp-init-frame :after #'persp-project--init-frame))
-        ;; Disable mode
-        (progn
-          (advice-remove 'project-switch-project #'persp-project--ensure-perspective)
-          (advice-remove 'project-dired #'persp-project--ensure-perspective)
-          (advice-remove 'project-find-file #'persp-project--ensure-perspective)
-          (advice-remove 'persp-init-frame #'persp-project--init-frame)))
-    ;; Dependencies not met
-    (progn
-      (message "You cannot enable persp-project-mode unless persp-mode and project are active.")
-      (setq persp-project-mode nil))))
 
 (provide 'persp-project)
 ;;; persp-project.el ends here
