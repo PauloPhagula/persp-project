@@ -45,14 +45,6 @@
 (require 'perspective)
 (require 'project)
 
-(defvar persp-project-mode nil
-  "Non-nil if persp-project-mode is enabled.")
-
-(defgroup persp-project nil
-  "Perspective integration with built-in project."
-  :group 'persp-mode
-  :group 'project)
-
 (defmacro project-persp-bridge (func-name)
   "Create advice to create a perspective before invoking function FUNC-NAME.
 The advice provides a bridge between perspective and project
@@ -60,43 +52,12 @@ functions when switching between projects. After switching to a new
 project, this advice creates a new perspective for that project."
   `(defadvice ,func-name (before project-create-perspective-after-switching-projects activate)
      "Create a dedicated perspective for the current project's window after switching projects."
-     (when persp-project-mode
-       (let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current))))))
-         (when (and persp-mode (project-current))
-           (persp-switch project-name))))))
+     (let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current))))))
+       (when (and persp-mode (project-current))
+         (persp-switch project-name)))))
 
-;;;###autoload
-(define-minor-mode persp-project-mode
-  "Toggle perspective integration with project mode.
-When enabled, creates a separate perspective when switching projects."
-  :require 'persp-project
-  :group 'persp-project
-  :init-value nil
-  :global t
-
-  (if persp-project-mode
-      (if (and persp-mode (featurep 'project))
-          (progn
-            (project-persp-bridge project-dired)
-            (project-persp-bridge project-find-file)
-            (defadvice persp-init-frame (after project-persp-init-frame activate)
-              "Rename initial perspective to `project-name' when a
-new frame is created in a known project."
-              (when persp-project-mode
-                (with-selected-frame frame
-                  (when (project-current)
-                    (persp-rename (file-name-nondirectory (directory-file-name (project-root (project-current)))))))))
-            (ad-activate 'persp-init-frame))
-        (message "You cannot enable persp-project-mode unless persp-mode and project are active.")
-        (setq persp-project-mode nil))
-    ;; Disable mode
-    (progn
-      (ad-remove-advice 'project-dired 'before 'project-create-perspective-after-switching-projects)
-      (ad-remove-advice 'project-find-file 'before 'project-create-perspective-after-switching-projects)
-      (ad-remove-advice 'persp-init-frame 'after 'project-persp-init-frame)
-      (ad-update 'project-dired)
-      (ad-update 'project-find-file)
-      (ad-update 'persp-init-frame))))
+(project-persp-bridge project-dired)
+(project-persp-bridge project-find-file)
 
 ;;;###autoload
 (defun project-persp-switch-project (project-to-switch)
@@ -131,6 +92,13 @@ perspective."
         (when (not (equal frame (selected-frame)))
           (with-selected-frame frame
             (persp-kill project-name))))))))
+
+(defadvice persp-init-frame (after project-persp-init-frame activate)
+  "Rename initial perspective to `project-name' when a
+new frame is created in a known project."
+  (with-selected-frame frame
+    (when (project-current)
+      (persp-rename (file-name-nondirectory (directory-file-name (project-root (project-current))))))))
 
 (provide 'persp-project)
 ;;; persp-project.el ends here
