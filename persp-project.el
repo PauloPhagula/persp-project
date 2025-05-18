@@ -39,30 +39,26 @@
   :prefix "persp-project-bridge-"
   :link '(url-link :tag "Github" "https://github.com/PauloPhagula/persp-project"))
 
-(defun persp-project--create-advice (func-name)
-  "Create advice to create a perspective before invoking function FUNC-NAME.
-The advice provides a bridge between perspective and project
-functions when switching between projects. After switching to a new
-project, this advice creates a new perspective for that project."
-  (eval
-   `(defadvice ,func-name (before persp-project--create-perspective-after-switching activate)
-      "Create a dedicated perspective for the current project's window after switching projects."
-      (let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current))))))
-        (when (and persp-mode (project-current))
-          (persp-switch project-name))))))
+(defun persp-project--create-perspective-after-switching (func &rest args)
+  "Create a dedicated perspective for the current project's window after switching projects.
+This is used as advice for project-related functions."
+  (let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current))))))
+    (when (and persp-mode (project-current))
+      (persp-switch project-name)))
+  (apply func args))
 
-(defun persp-project--remove-advice (func-name)
-  "Remove the advice for FUNC-NAME created by `persp-project--create-advice`."
-  (eval
-   `(ad-remove-advice ',func-name 'before 'persp-project--create-perspective-after-switching)
-   `(ad-update ',func-name)))
+(defun persp-project--init-frame (frame)
+  "Rename initial perspective to `project-name` when a new frame is created in a known project."
+  (with-selected-frame frame
+    (when (project-current)
+      (persp-rename (file-name-nondirectory (directory-file-name (project-root (project-current))))))))
 
 (defun persp-project-switch-project (project-to-switch)
   "Switch to a project or perspective we have visited before.
 If the perspective of the corresponding project does not exist, this
 function will call `persp-switch' to create one and switch to
 that before `project-switch-project' invokes
-`project-switch-project-action`.
+`project-switch-project-action'.
 
 Otherwise, this function calls `persp-switch' to switch to an
 existing perspective of the project unless we're already in that
@@ -92,12 +88,6 @@ PROJECT-TO-SWITCH denotes the project/perspective."
           (with-selected-frame frame
             (persp-kill project-name))))))))
 
-(defadvice persp-init-frame (after persp-project--init-frame activate)
-  "Rename initial perspective to `project-name` when a new frame is created in a known project."
-  (with-selected-frame frame
-    (when (project-current)
-      (persp-rename (file-name-nondirectory (directory-file-name (project-root (project-current))))))))
-
 ;;;###autoload
 (define-minor-mode persp-project-mode
   "`perspective-mode` and `project` integration.
@@ -107,22 +97,22 @@ Creates perspective for projects."
   :init-value nil
   :global t
 
-  (if persp-project-mode
-      (if (and persp-mode (featurep 'project))
+  (if (and persp-mode (featurep 'project))
+      (if persp-project-mode
+          ;; Enable mode
           (progn
-            (persp-project--create-advice 'project-dired)
-            (persp-project--create-advice 'project-find-file)
-            (ad-enable-advice 'persp-init-frame 'after 'persp-project--init-frame)
-            (ad-activate 'persp-init-frame))
-        (message "You cannot enable persp-project-mode unless persp-mode and project are active.")
-        (setq persp-project-mode nil))
-
-    ;; Disable advices when the mode is turned off
+            (advice-add 'project-dired :before #'persp-project--create-perspective-after-switching)
+            (advice-add 'project-find-file :before #'persp-project--create-perspective-after-switching)
+            (advice-add 'persp-init-frame :after #'persp-project--init-frame))
+        ;; Disable mode
+        (progn
+          (advice-remove 'project-dired #'persp-project--create-perspective-after-switching)
+          (advice-remove 'project-find-file #'persp-project--create-perspective-after-switching)
+          (advice-remove 'persp-init-frame #'persp-project--init-frame)))
+    ;; Dependencies not met
     (progn
-      (persp-project--remove-advice 'project-dired)
-      (persp-project--remove-advice 'project-find-file)
-      (ad-disable-advice 'persp-init-frame 'after 'persp-project--init-frame)
-      (ad-update 'persp-init-frame))))
+      (message "You cannot enable persp-project-mode unless persp-mode and project are active.")
+      (setq persp-project-mode nil))))
 
 (provide 'persp-project)
 ;;; persp-project.el ends here
