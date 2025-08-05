@@ -1,3 +1,9 @@
+# ⚠️ Deprecatation Notice ⚠️
+
+This project is now abandoned. I've switched to and recommend you use https://github.com/mclear-tools/tabspaces instead.
+
+---
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/PauloPhagula/persp-project/actions/workflows/pipeline.yml/badge.svg?branch=main)](https://github.com/PauloPhagula/persp-project/actions/workflows/pipeline.yml)
 <!-- [![MELPA](http://melpa.org/packages/persp-project-badge.svg)](http://melpa.org/#/persp-project)
