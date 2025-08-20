@@ -1,4 +1,4 @@
-# ⚠️ Deprecatation Notice ⚠️
+# ⚠️ Deprecation Notice ⚠️
 
 This project is now abandoned. I've switched to and recommend you use https://github.com/mclear-tools/tabspaces instead.
 
